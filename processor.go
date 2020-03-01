@@ -36,21 +36,23 @@ type PDAProcessor struct{
 	Current_State string
 }
 
-// Function to push data on to the stack when executing the PDA. This is a function of the PDA processor. It modifies the stack.
-func push (p *PDAProcessor, val string) {
+// Function to push data on to the stack when executing the PDA. It modifies the stack.
+func push(p *PDAProcessor, val string) {
 	p.Stack = append(p.Stack, val)
 }
 
-// Function to pop data from the stack when executing the PDA. This is a function of the PDA processor. It modifies the stack.
-func pop (p *PDAProcessor) {
+// Function to pop data from the stack when executing the PDA. It modifies the stack.
+func pop(p *PDAProcessor) {
 	p.Stack = p.Stack[:len(p.Stack) -1]
 }
 
 // Function to obtain the top n elements of the stack. This function does not modify the stack.
-func peek (p *PDAProcessor, k int) []string {
+func peek(p PDAProcessor, k int) []string {
 	top := [] string{}
 	l := len(p.Stack)
-	if ( k == 1) {
+	if (l <= k) {
+		top = p.Stack
+	} else if ( k == 1) {
 		top = append(top, p.Stack[l-1])
 	} else {
 		top = p.Stack[l-k:l-1]
@@ -58,13 +60,15 @@ func peek (p *PDAProcessor, k int) []string {
 	return top
 }
 
-// Function reset the PDA and the stack. This deletes everything from the stack so that we can start anew.
-func reset (p *PDAProcessor) {
+// Function to reset the PDA and the stack. This deletes everything from the stack 
+// and sets the current state to the start state so that we can start anew.
+func reset(p *PDAProcessor) {
 	p.Stack = []string {"null"}
 	p.Current_State = p.Pda.Start_state
 }
 
-// Function to open the grammar file. This function opens the json file, reads it and unmarshal's its input into the PDA structure.
+// Function to open the grammar file. This function opens the json file, reads it and 
+// unmarshal's its input into the PDA structure.
 func open(fn string, p *Pda) bool {
 	dat, err := ioutil.ReadFile(fn)
 	if err != nil {
@@ -82,30 +86,44 @@ func open(fn string, p *Pda) bool {
 }
 
 // Function to check if the Automata is in accepting after the input has been processed.
-func is_accepted(p Pda, cs string) {
+func is_accepted(proc PDAProcessor) {
 	flag := 0
-	accepting_states := p.Accepting_states
+	accepting_states := proc.Pda.Accepting_states
+	cs := proc.Current_State
 	
 	for i:= 0; i < len(accepting_states); i++ {
 		if cs == accepting_states[i] {
 			flag = 1
-			fmt.Println("Accepted")
+			fmt.Println("Input token Accepted")
+			done(proc, true)
 			break
 		}
 	}
 
 	if flag == 0 {
-		fmt.Println("Rejected")
+		fmt.Println("Input token Rejected")
+		done(proc, false)
 	}
 }
 
+// The done returns the final status of the current state and the stack after the input string is processed.
+func done(proc PDAProcessor, is_accepted bool){
+	fmt.Println("pda_name: ", proc.Pda.Name)
+	fmt.Println("is_method_accepted: ", is_accepted)
+	fmt.Println("current_state: ", proc.Current_State)
+	fmt.Println("stack_symbols", peek(proc, 5))
+}
+
+
+// This function accepts the input string and performs the necessary transitions and 
+// stack operations for every token,
 func put(proc PDAProcessor, p Pda, s string) int {
 	inp_len := len(s)
 	transitions := p.Transitions
 	tran_len := len(transitions)
 	transition_count := 0
 
-	current_state := p.Start_state
+	proc.Current_State = p.Start_state
 	currentStackSymbol := "null"
 
 	for i := 0; i < inp_len; i++ {
@@ -114,9 +132,9 @@ func put(proc PDAProcessor, p Pda, s string) int {
 		matching_transition := false
 		for j := 0; j < tran_len; j++ {
 			t := transitions[j]
-			if t[0] == current_state && t[1] == char && t[2] == currentStackSymbol {
+			if t[0] == proc.Current_State && t[1] == char && t[2] == currentStackSymbol {
 				matching_transition = true
-				current_state = t[3]
+				proc.Current_State = t[3]
 
 				if t[4] == "0" {
 					push(&proc, "0")
@@ -124,7 +142,7 @@ func put(proc PDAProcessor, p Pda, s string) int {
 					pop(&proc)
 				}
 
-				top := peek(&proc, 1)[0]
+				top := peek(proc, 1)[0]
 				currentStackSymbol = top
 				transition_count = transition_count + 1
 				break
@@ -135,19 +153,23 @@ func put(proc PDAProcessor, p Pda, s string) int {
 			break
 		}
 
-		top := peek(&proc, 1)[0]
-		if current_state == "q3" && top == "null" && i == inp_len-1 {
-			current_state = "q4"
+		top := peek(proc, 1)[0]
+		if proc.Current_State == "q3" && top == "null" && i == inp_len-1 {
+			proc.Current_State = "q4"
 			transition_count = transition_count + 1
 			break
 		}
 	}
 
-	is_accepted(p, current_state)
+	is_accepted(proc)
 
 	return transition_count
 }
 
+
+// main function to start input processing. It reads the grammar json file
+// to create an instance of PDA. The input is obtained either from a text file or
+// standard input.
 func main(){
 
 	fn := os.Args[1]

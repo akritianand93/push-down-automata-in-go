@@ -33,6 +33,7 @@ type Pda struct {
 type PDAProcessor struct{
 	Stack [] string
 	Pda Pda
+	Current_State string
 }
 
 // Function to push data on to the stack when executing the PDA. This is a function of the PDA processor. It modifies the stack.
@@ -60,6 +61,7 @@ func peek (p *PDAProcessor, k int) []string {
 // Function reset the PDA and the stack. This deletes everything from the stack so that we can start anew.
 func reset (p *PDAProcessor) {
 	p.Stack = []string {"null"}
+	p.Current_State = p.Pda.Start_state
 }
 
 // Function to open the grammar file. This function opens the json file, reads it and unmarshal's its input into the PDA structure.
@@ -153,13 +155,10 @@ func main(){
 	var p Pda
 	open(fn, &p)
 
-	stack := []string {"null"}
 	proc := PDAProcessor {
 		Pda: p,
-		Stack: stack,
 	}
-
-	//print(p)
+	reset(&proc)
 
 	transition_count := 0
 

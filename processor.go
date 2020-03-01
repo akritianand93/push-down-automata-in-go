@@ -134,7 +134,7 @@ func put(proc PDAProcessor, p Pda, s string) int {
 		matching_transition := false
 		for j := 0; j < tran_len; j++ {
 			t := transitions[j]
-			transition_count = check_for_dead_moves(t,&proc,transition_count) 
+			transition_count = check_for_dead_moves(t, &proc, transition_count) 
 			if t[0] == proc.Current_State && t[1] == char && t[2] == currentStackSymbol {
 				matching_transition = true
 				proc.Current_State = t[3]

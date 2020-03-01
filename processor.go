@@ -16,6 +16,8 @@ import (
 	"encoding/json"
 )
 
+var call_number = 0
+
 // A structure that defines the a Push Down Automata
 // This class contains the attributes of a PDA
 type Pda struct {
@@ -38,16 +40,19 @@ type PDAProcessor struct{
 
 // Function to push data on to the stack when executing the PDA. It modifies the stack.
 func push(p *PDAProcessor, val string) {
+	call_number = call_number + 1
 	p.Stack = append(p.Stack, val)
 }
 
 // Function to pop data from the stack when executing the PDA. It modifies the stack.
 func pop(p *PDAProcessor) {
+	call_number = call_number + 1
 	p.Stack = p.Stack[:len(p.Stack) -1]
 }
 
 // Function to obtain the top n elements of the stack. This function does not modify the stack.
 func peek(p PDAProcessor, k int) []string {
+	call_number = call_number + 1
 	top := [] string{}
 	l := len(p.Stack)
 	if (l <= k) {
@@ -63,6 +68,7 @@ func peek(p PDAProcessor, k int) []string {
 // Function to reset the PDA and the stack. This deletes everything from the stack 
 // and sets the current state to the start state so that we can start anew.
 func reset(p *PDAProcessor) {
+	call_number = call_number + 1
 	p.Stack = make([]string, 0)
 	p.Current_State = p.Pda.Start_state
 }
@@ -70,6 +76,7 @@ func reset(p *PDAProcessor) {
 // Function to open the grammar file. This function opens the json file, reads it and 
 // unmarshal's its input into the PDA structure.
 func open(fn string, p *Pda) bool {
+	call_number = call_number + 1
 	dat, err := ioutil.ReadFile(fn)
 	if err != nil {
 		fmt.Print(err)
@@ -87,6 +94,7 @@ func open(fn string, p *Pda) bool {
 
 // Function to check if the input string has been accepted by the pda 
 func is_accepted(proc PDAProcessor) {
+	call_number = call_number + 1
 	flag := 0
 	accepting_states := proc.Pda.Accepting_states
 	cs := proc.Current_State
@@ -110,6 +118,8 @@ func is_accepted(proc PDAProcessor) {
 
 // The done returns the final status of the current state and the stack after the input string is processed.
 func done(proc PDAProcessor, is_accepted bool){
+	call_number = call_number + 1
+	fmt.Println("call_number: ", call_number)
 	fmt.Println("pda_name: ", proc.Pda.Name)
 	fmt.Println("is_method_accepted: ", is_accepted)
 	fmt.Println("current_state: ", proc.Current_State)
@@ -120,6 +130,8 @@ func done(proc PDAProcessor, is_accepted bool){
 // This function accepts the input string and performs the necessary transitions and 
 // stack operations for every token,
 func put(proc PDAProcessor, p Pda, s string) int {
+	call_number = call_number + 1
+
 	inp_len := len(s)
 	transitions := p.Transitions
 	tran_len := len(transitions)
@@ -168,6 +180,7 @@ func put(proc PDAProcessor, p Pda, s string) int {
 // Performs the last transition to move the Automata to accepting state after the input
 // string has been successfully parsed. 
 func eos(proc PDAProcessor, transition_count int)int {
+	call_number = call_number + 1
 	length_of_stack := len(proc.Stack)
 	allowed_transitions := proc.Pda.Transitions
 	target_state := ""
@@ -193,6 +206,7 @@ func eos(proc PDAProcessor, transition_count int)int {
 // Pushes initial EOS token into the stack and moves to the next state indicating
 // the start of transitions
 func check_for_dead_moves(transition []string, proc *PDAProcessor, transition_count int) int{
+	call_number = call_number + 1
 	allowed_current_state := transition[0]
 	input := transition[1]
 	allowed_top_of_stack := transition[2]

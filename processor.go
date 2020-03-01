@@ -1,10 +1,10 @@
 package main
 
 // Libraries needed:
-// fmt: to print output / statements
-// ioutil: file operations like open file, read file and close file
-// bufio: read input from standard input using the Scanner class
-// os: used to read command line arguments
+// fmt: to print output / statements.
+// ioutil: file operations like open file, read file and close file.
+// bufio: read input from standard input using the Scanner class.
+// os: used to read command line arguments.
 // encoding/json: used to marshal / unmarshal json input as needed.
 
 
@@ -26,6 +26,7 @@ type Pda struct {
 	Accepting_states [] string
 	Start_state string
 	Transitions [][]string
+	Eos string
 }
 
 // This class simulates a PDA processor that is it runs the PDA for teh provided input.
@@ -45,8 +46,14 @@ func pop (p *PDAProcessor) {
 }
 
 // Function to obtain the top n elements of the stack. This function does not modify the stack.
-func peek (p *PDAProcessor) string {
-	top := p.Stack[len(p.Stack)-1]
+func peek (p *PDAProcessor, k int) []string {
+	top := [] string{}
+	l := len(p.Stack)
+	if ( k == 1) {
+		top = append(top, p.Stack[l-1])
+	} else {
+		top = p.Stack[l-k:l-1]
+	}
 	return top
 }
 
@@ -90,7 +97,6 @@ func is_accepted(p Pda, cs string) {
 	}
 }
 
-
 func put(proc PDAProcessor, p Pda, s string) int {
 	inp_len := len(s)
 	transitions := p.Transitions
@@ -116,7 +122,8 @@ func put(proc PDAProcessor, p Pda, s string) int {
 					pop(&proc)
 				}
 
-				currentStackSymbol = peek(&proc)
+				top := peek(&proc, 1)[0]
+				currentStackSymbol = top
 				transition_count = transition_count + 1
 				break
 			}	       
@@ -126,7 +133,8 @@ func put(proc PDAProcessor, p Pda, s string) int {
 			break
 		}
 
-		if current_state == "q3" && peek(&proc) == "null" && i == inp_len-1 {
+		top := peek(&proc, 1)[0]
+		if current_state == "q3" && top == "null" && i == inp_len-1 {
 			current_state = "q4"
 			transition_count = transition_count + 1
 			break

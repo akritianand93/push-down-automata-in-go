@@ -207,7 +207,6 @@ func check_for_dead_moves(transition []string, proc *PDAProcessor, transition_co
 }
 
 
-
 // main function to start input processing. It reads the grammar json file
 // to create an instance of PDA. The input is obtained either from a text file or
 // standard input.
@@ -222,7 +221,6 @@ func main(){
 		Pda: p,
 	}
 	reset(&proc)
-	
 	transition_count := 0
 	input_token := ""
 

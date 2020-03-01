@@ -63,7 +63,7 @@ func peek(p PDAProcessor, k int) []string {
 // Function to reset the PDA and the stack. This deletes everything from the stack 
 // and sets the current state to the start state so that we can start anew.
 func reset(p *PDAProcessor) {
-	p.Stack = []string {"null"}
+	p.Stack = make([]string, 0)
 	p.Current_State = p.Pda.Start_state
 }
 
@@ -85,18 +85,20 @@ func open(fn string, p *Pda) bool {
 	return true
 }
 
-// Function to check if the Automata is in accepting after the input has been processed.
+// Function to check if the input string has been accepted by the pda 
 func is_accepted(proc PDAProcessor) {
 	flag := 0
 	accepting_states := proc.Pda.Accepting_states
 	cs := proc.Current_State
-	
-	for i:= 0; i < len(accepting_states); i++ {
-		if cs == accepting_states[i] {
-			flag = 1
-			fmt.Println("Input token Accepted")
-			done(proc, true)
-			break
+
+	if len(proc.Stack) == 0 {
+		for i:= 0; i < len(accepting_states); i++ {
+			if cs == accepting_states[i] {
+				flag = 1
+				fmt.Println("Input token Accepted")
+				done(proc, true)
+				break
+			}
 		}
 	}
 
@@ -125,20 +127,21 @@ func put(proc PDAProcessor, p Pda, s string) int {
 
 	proc.Current_State = p.Start_state
 	currentStackSymbol := "null"
-
-	for i := 0; i < inp_len; i++ {
+	i := 0
+	for ; i < inp_len; i++ {
 		
 		char := string(s[i])
 		matching_transition := false
 		for j := 0; j < tran_len; j++ {
 			t := transitions[j]
+			transition_count = check_for_dead_moves(t, &proc, transition_count) 
 			if t[0] == proc.Current_State && t[1] == char && t[2] == currentStackSymbol {
 				matching_transition = true
 				proc.Current_State = t[3]
 
-				if t[4] == "0" {
-					push(&proc, "0")
-				} else if t[4] == "null" {
+				if t[4] != "null" {
+					push(&proc, t[4])
+				} else {
 					pop(&proc)
 				}
 
@@ -152,17 +155,54 @@ func put(proc PDAProcessor, p Pda, s string) int {
 		if (!matching_transition) {
 			break
 		}
+	}
+	if i == inp_len {
+		transition_count = eos(proc,transition_count)
+	} else {
+		is_accepted(proc)
+	}
 
-		top := peek(proc, 1)[0]
-		if proc.Current_State == "q3" && top == "null" && i == inp_len-1 {
-			proc.Current_State = "q4"
-			transition_count = transition_count + 1
-			break
+	return transition_count
+}
+
+// Performs the last transition to move the Automata to accepting state after the input
+// string has been successfully parsed. 
+func eos(proc PDAProcessor, transition_count int)int {
+	length_of_stack := len(proc.Stack)
+	allowed_transitions := proc.Pda.Transitions
+	target_state := ""
+
+	for j := 0; j < len(allowed_transitions); j++ {
+		var allowed_current_state = allowed_transitions[j][0]
+		if allowed_current_state == proc.Current_State {
+			target_state = allowed_transitions[j][3]
 		}
 	}
 
+	if peek(proc, 1)[0] == proc.Pda.Eos {
+		proc.Current_State = target_state
+		if length_of_stack > 0 {
+			pop(&proc)
+		}
+		transition_count = transition_count + 1
+	}
 	is_accepted(proc)
+	return transition_count
+}
 
+// Pushes initial EOS token into the stack and moves to the next state indicating
+// the start of transitions
+func check_for_dead_moves(transition []string, proc *PDAProcessor, transition_count int) int{
+	allowed_current_state := transition[0]
+	input := transition[1]
+	allowed_top_of_stack := transition[2]
+	target_state := transition[3]
+	action_item := transition[4]
+	if allowed_current_state == proc.Current_State && input == "null" && allowed_top_of_stack == "null"{
+        proc.Current_State = target_state
+        push(proc, action_item)
+        transition_count = transition_count + 1
+	} 
 	return transition_count
 }
 
@@ -181,16 +221,15 @@ func main(){
 		Pda: p,
 	}
 	reset(&proc)
-
 	transition_count := 0
+	input_token := ""
 
 	if len(os.Args) < 3 {
 
 		fmt.Print("Enter input string: ")
 		scanner := bufio.NewScanner(os.Stdin)
 		scanner.Scan()
-		transition_count = put(proc, p, scanner.Text())
-
+		input_token = scanner.Text()
 	} else {
 		inp := os.Args[2]
 		file, err := os.Open(inp)
@@ -200,8 +239,13 @@ func main(){
 		if err != nil {
 			fmt.Print(err)
 		}
+		input_token = string(input[:n])
+	}
 
-		transition_count = put(proc, p, string(input[:n]))
+	if input_token == "" {
+		is_accepted(proc)
+	} else{
+		transition_count = put(proc, p, input_token)
 	}
 
 	fmt.Println("Number of transitions = ", transition_count)

@@ -40,13 +40,11 @@ type PDAProcessor struct{
 
 // Function to push data on to the stack when executing the PDA. It modifies the stack.
 func push(p *PDAProcessor, val string) {
-	call_number = call_number + 1
 	p.Stack = append(p.Stack, val)
 }
 
 // Function to pop data from the stack when executing the PDA. It modifies the stack.
 func pop(p *PDAProcessor) {
-	call_number = call_number + 1
 	p.Stack = p.Stack[:len(p.Stack) -1]
 }
 
@@ -206,7 +204,6 @@ func eos(proc PDAProcessor, transition_count int)int {
 // Pushes initial EOS token into the stack and moves to the next state indicating
 // the start of transitions
 func check_for_dead_moves(transition []string, proc *PDAProcessor, transition_count int) int{
-	call_number = call_number + 1
 	allowed_current_state := transition[0]
 	input := transition[1]
 	allowed_top_of_stack := transition[2]

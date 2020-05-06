@@ -1,64 +1,76 @@
-#### Push Down Atomata implementing Client Server Architecture in Go
+### Push Down Atomata in Go
 
 #### Objectives
 
-The objective of this assignment is to provide REST APIs to process the input tokens and to verify them against a PushDown Automata. The program has the following APIs:
-- /pdas - returns id and name of all pdas
-- /pdas/id - creates a new PDA from the request body provided in the input
-- /pdas/id/reset - returns the PDA i.e. the stack and the queue of unprocessed tokens.
-- /pdas/id/tokens/position - Process the token for the specified location. The token is
-provided as a part of the request body. If the token position is not one to be
-immediately processed, then the token is queued for later processing
-- /pdas/id/eos/position - Specifies the position of the last token for the input.
-- /pdas/id/is_accepted - Specifies if the PDA is in accepting state or not.
-- /pdas/id/stack/top/k - returns the top k symbols from the stack
-- /pdas/id/stack/len - return the length of the stack
-- /pdas/id/state - returns id and name of all pdas
-- /pdas/id/tokens - returns the list of tokens that have been queued for later processing
-- /pdas/id/snapshot/k - returns the current state, the queued tokens and the top k
-symbols in the stack.
-- /pdas/id/close - Cleans up the resources generated while processing the input for the
-pda. If no resources were created, returns nothing to clean.
-- /pdas/id/delete - deletes the pda for the given id
+The objective of this assignment is to process the input string and to verify it against a PushDown Automata. The program requires the following:
+- A JSON file which defines the grammar
+- An optional text file consisting of the string to be processed. If this text file is not provided in the input, the program requires the user to provide the input through standard input.
+
+The output of the program states if the provided string was accepted or rejected by the Push Down Automata. It also prints out all the intermediate stages that were taken while processing each input token.
+
+#### How to run the program?
+
+This is a Golang program that is run from the command line with the following command. As samples we have also added two PDA’s grammar1.json and grammar2.json.
+
+#### Method 1:
+
+Command to run a go program from command line
+
+```
+go run processor.go <grammar-file-name> <optional-input-file-name>
+
+```
+
+***Example:***
+
+```
+go run processor.go grammar1.json
+
+```
+
+```
+go run processor.go grammar1.json input.txt
+
+```
+
+#### Expected Output:
+
+- The command line asks for the input string to be entered by the user if the optional input file is not provided as an argument.
+- After the input string is verified, it prints several steps taken by the PDA for consuming the input
+string and final outcome of whether the input string is accepted or rejected.
 
 
-#### How to start the server?
+### Method 2:
 
-This is a Golang program that is run from the command line.
-Server startup Command: ​bash start_server.sh
+We have created a bash script that executes the program. It can be used as follows:
 
-#### How to run the clients?
+```
+bash run_using_g1_accept_user_ip.sh
 
-We have 2 different clients creating 2 PDA’s of their own
+```
 
-#### Client 1:
+Expected Output:
+- This bash script runs for grammar1.json.
+- The command line asks for the input string to be entered by the user.
+- After the input string is verified, it prints several steps taken by the PDA for consuming the input
+string and final outcome of whether the input string is accepted or rejected.
 
-bash client1_script.sh
 
-#### Expected Output
+### To run all test cases
+
+```
+bash​ ​run_script_with_all_test_cases.sh
+
+```
+
+Expected Output:
+- This bash script runs for both grammar1.json and grammar2.json
+- It consists of default test cases exhibiting standard output and standard error.
 
 
-● This bash script runs for the PDA 0n​ ​1n​
-● This client demonstrates how correct ​tokens presented in​ ​random​ order can be processed and ​accepted​.
-● The PDA stores the tokens in a ​Hold Back queue​ for processing it later and processes it immediately when it can be consumed
-● It creates a separate go routine on the server for processing
+### Sample Screenshots
 
-#### Client 2:
+![Input accepted for Grammar 1 example](g1_accepted.png)
 
-bash client2_script.sh
 
-#### Expected Output
-
-● This bash script runs for the PDA 0n​ ​1n​
-● This client demonstrates how ​incorrect​ tokens presented in ​random​ order can lead to
-the PDA ​rejecting​ the stream of input tokens.
-● The PDA stores the tokens in a Hold Back queue for processing it later and processes it
-immediately when it can be consumed. This
-● It creates a thread of its own on the server for processing
-
-#### Program Analysis
-
-● As a part of this assignment we were learnt to create REST APIs in golang. This was very beneficial as REST is the most common form of client server communication used today.
-● We have also learnt and implemented multithreading in golang with the help of goroutines.
-● Other concepts that we learnt and used as a part of this assignment include - use of go cache, maps and gorilla mux.
-
+![Input rejected for Grammar 1 example](g1_rejected.png)
